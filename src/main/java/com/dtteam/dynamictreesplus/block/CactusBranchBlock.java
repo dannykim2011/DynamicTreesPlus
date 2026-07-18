@@ -11,8 +11,6 @@ import com.dtteam.dynamictrees.block.leaves.LeavesProperties;
 import com.dtteam.dynamictrees.block.soil.SoilBlock;
 import com.dtteam.dynamictrees.loot.DTLootParameterSets;
 import com.dtteam.dynamictrees.loot.entry.SeedItemLootPoolEntry;
-import com.dtteam.dynamictrees.loot.function.MultiplyByLogsCount;
-import com.dtteam.dynamictrees.loot.function.MultiplyBySticksCount;
 import com.dtteam.dynamictrees.systems.GrowSignal;
 import com.dtteam.dynamictrees.systems.growthlogic.context.DirectionSelectionContext;
 import com.dtteam.dynamictrees.tree.ChunkTreeHelper;
@@ -24,19 +22,20 @@ import com.google.common.base.Predicate;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.util.StringRepresentable;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.InsideBlockEffectApplier;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.context.BlockPlaceContext;
-import net.minecraft.world.level.BlockAndTintGetter;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.EnumProperty;
@@ -54,6 +53,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Objects;
+import java.util.Optional;
 
 @SuppressWarnings("deprecation")
 public class CactusBranchBlock extends BranchBlock {
@@ -93,7 +93,7 @@ public class CactusBranchBlock extends BranchBlock {
     /**
      * @param name name of branch, without a {@code _branch} suffix
      */
-    public CactusBranchBlock(ResourceLocation name, Properties properties) {
+    public CactusBranchBlock(Identifier name, Properties properties) {
         super(name, properties);
 
         this.registerDefaultState(this.getStateDefinition().any().setValue(TRUNK_TYPE, CactusThickness.TRUNK).setValue(ORIGIN, Direction.DOWN));
@@ -145,12 +145,13 @@ public class CactusBranchBlock extends BranchBlock {
     private static final double hurtMovementDelta = 0.003;
 
     @Override
-    public void entityInside(BlockState state, Level worldIn, BlockPos pos, Entity entity) {
+    protected void entityInside(BlockState state, Level worldIn, BlockPos pos, Entity entity,
+                                InsideBlockEffectApplier effectApplier, boolean isPrecise) {
         boolean damage = false;
         if (DTPConfigs.CACTUS_PRICKLE_ON_MOVE_ONLY.get() && entity instanceof LivingEntity) {
             boolean falling = entity.getDeltaMovement().y < 0;
             entity.setDeltaMovement(entity.getDeltaMovement().x * 0.25, entity.getDeltaMovement().y * (falling ? 0.5 : 1), entity.getDeltaMovement().z * 0.25);
-            if (!worldIn.isClientSide && (entity.xOld != entity.getX() || entity.yOld != entity.getY() || entity.zOld != entity.getZ())) {
+            if (!worldIn.isClientSide() && (entity.xOld != entity.getX() || entity.yOld != entity.getY() || entity.zOld != entity.getZ())) {
                 double xMovement = Math.abs(entity.getX() - entity.xOld);
                 double yMovement = Math.abs(entity.getY() - entity.yOld);
                 double zMovement = Math.abs(entity.getZ() - entity.zOld);
@@ -163,6 +164,16 @@ public class CactusBranchBlock extends BranchBlock {
         }
 
         if (damage) entity.hurt(worldIn.damageSources().cactus(), 1.0F);
+    }
+
+    @Override
+    public BranchBlock setFlammability(int flammability) {
+        return this;
+    }
+
+    @Override
+    public BranchBlock setFireSpreadSpeed(int fireSpreadSpeed) {
+        return this;
     }
 
 
@@ -288,7 +299,7 @@ public class CactusBranchBlock extends BranchBlock {
 
 
     @Override
-    public Connections getConnectionData(@Nonnull BlockAndTintGetter world, @Nonnull BlockPos pos, @Nonnull BlockState state) {
+    public Connections getConnectionData(@Nonnull BlockGetter world, @Nonnull BlockPos pos, @Nonnull BlockState state) {
         Connections connections = new Connections();
 
         for (Direction dir : Direction.values()) {
@@ -394,17 +405,20 @@ public class CactusBranchBlock extends BranchBlock {
     }
 
     @Override
+    public Optional<Block> getPrimitiveLog() {
+        return Optional.of(Blocks.CACTUS);
+    }
+
+    @Override
     public LootTable.Builder createBranchDrops(HolderLookup.Provider registries) {
         return LootTable.lootTable().withPool(
                 LootPool.lootPool().setRolls(ConstantValue.exactly(1)).add(
-                        LootItem.lootTableItem(getPrimitiveLog().get())
-                                .apply(MultiplyByLogsCount.multiplyByLogsCount())
+                        LootItem.lootTableItem(Blocks.CACTUS)
                                 .apply(ApplyExplosionDecay.explosionDecay())
                 )
         ).withPool(
                 LootPool.lootPool().setRolls(ConstantValue.exactly(1)).add(
                         SeedItemLootPoolEntry.lootTableSeedItem()
-                                .apply(MultiplyBySticksCount.multiplyBySticksCount())
                                 .apply(ApplyExplosionDecay.explosionDecay())
                 )
         ).setParamSet(DTLootParameterSets.BRANCHES);

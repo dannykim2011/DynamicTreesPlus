@@ -11,7 +11,9 @@
   "growth_logic_kit": {
     "name": "dynamictreesplus:mega_cactus",
     "properties": {
-      "mod": 6
+      "height_variation": 6,
+      "stop_branching_height": 5,
+      "max_height": 7
     }
   },
   "preferred_climate": "arid",

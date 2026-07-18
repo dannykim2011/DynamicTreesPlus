@@ -31,7 +31,7 @@ credits='''${mod_credits}'''
 
 [[dependencies.${mod_id}]]
     modId="dynamictrees"
-    mandatory=true
-    versionRange="[1.6.0,)"
+    type="required"
+    versionRange="[${dynamic_trees_version},)"
     ordering="AFTER"
     side="BOTH"

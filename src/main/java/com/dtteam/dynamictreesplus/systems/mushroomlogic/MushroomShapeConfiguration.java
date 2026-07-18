@@ -10,6 +10,11 @@ import java.util.List;
 
 public final class MushroomShapeConfiguration extends Configuration<MushroomShapeConfiguration, MushroomShapeKit> {
 
+    @Override
+    public Class<MushroomShapeConfiguration> getRegistryType() {
+        return MushroomShapeConfiguration.class;
+    }
+
     public static final TemplateRegistry<MushroomShapeConfiguration> TEMPLATES = new TemplateRegistry<>();
 
     public MushroomShapeConfiguration(MushroomShapeKit configurable) {

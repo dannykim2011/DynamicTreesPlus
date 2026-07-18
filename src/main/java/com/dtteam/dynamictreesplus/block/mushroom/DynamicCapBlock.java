@@ -11,6 +11,9 @@ import com.dtteam.dynamictrees.tree.family.Family;
 import com.dtteam.dynamictreesplus.systems.mushroomlogic.MushroomCapDisc;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
@@ -22,6 +25,7 @@ import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.ScheduledTickAccess;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.HugeMushroomBlock;
 import net.minecraft.world.level.block.PipeBlock;
@@ -40,14 +44,14 @@ public class DynamicCapBlock extends HugeMushroomBlock implements TreePart, Upda
 
     public CapProperties properties = CapProperties.NULL;
 
-    public DynamicCapBlock(CapProperties capProperties, final Properties properties) {
-        this(properties);
+    public DynamicCapBlock(Identifier id, CapProperties capProperties, final Properties properties) {
+        this(id, properties);
         this.setProperties(capProperties);
         capProperties.setDynamicCapState(defaultBlockState(), false);
     }
 
-    public DynamicCapBlock(Properties properties) {
-        super(properties);
+    public DynamicCapBlock(Identifier id, Properties properties) {
+        super(properties.setId(ResourceKey.create(Registries.BLOCK, id)));
         this.registerDefaultState(stateDefinition.any().setValue(DISTANCE, 1).setValue(NORTH, true).setValue(EAST, true).setValue(SOUTH, true).setValue(WEST, true).setValue(UP, true).setValue(DOWN, true));
     }
 
@@ -124,7 +128,6 @@ public class DynamicCapBlock extends HugeMushroomBlock implements TreePart, Upda
         return TreePartType.OTHER;
     }
 
-    @Override
     public ItemStack getCloneItemStack(BlockState state, HitResult target, LevelReader level, BlockPos pos, Player player) {
         return getProperties(state).getPrimitiveCapItemStack();
     }
@@ -187,24 +190,28 @@ public class DynamicCapBlock extends HugeMushroomBlock implements TreePart, Upda
     }
 
     @Override
-    public BlockState updateShape(BlockState pState, Direction pFacing, BlockState pFacingState, LevelAccessor pLevel, BlockPos pCurrentPos, BlockPos pFacingPos) {
-        return properties.isPartOfCap(pFacingState)
-                ? pState.setValue(PipeBlock.PROPERTY_BY_DIRECTION.get(pFacing), false)
-                : super.updateShape(pState, pFacing, pFacingState, pLevel, pCurrentPos, pFacingPos);
+    protected BlockState updateShape(BlockState state, LevelReader level, ScheduledTickAccess ticks, BlockPos pos,
+                                     Direction directionToNeighbour, BlockPos neighbourPos,
+                                     BlockState neighbourState, RandomSource random) {
+        return properties.isPartOfCap(neighbourState)
+                ? state.setValue(PipeBlock.PROPERTY_BY_DIRECTION.get(directionToNeighbour), false)
+                : super.updateShape(state, level, ticks, pos, directionToNeighbour, neighbourPos, neighbourState, random);
     }
 
     @Override
-    public boolean onDestroyedByPlayer(BlockState state, Level level, BlockPos pos, Player player, boolean willHarvest, FluidState fluid) {
-        boolean destroyed = super.onDestroyedByPlayer(state, level, pos, player, willHarvest, fluid);
+    public boolean onDestroyedByPlayer(BlockState state, Level level, BlockPos pos, Player player, ItemStack toolStack,
+                                       boolean willHarvest, FluidState fluid) {
+        boolean destroyed = super.onDestroyedByPlayer(state, level, pos, player, toolStack, willHarvest, fluid);
         //We update neighboring cap blocks in the corners as well
         updateNeighborsSurround(level, pos, DynamicCapBlock.class);
         return destroyed;
     }
 
     @Override
-    public void neighborChanged(BlockState pState, Level level, BlockPos pos, Block pBlock, BlockPos pFromPos, boolean pIsMoving) {
+    protected void neighborChanged(BlockState pState, Level level, BlockPos pos, Block pBlock,
+                                   net.minecraft.world.level.redstone.Orientation orientation, boolean pIsMoving) {
         level.scheduleTick(pos, pBlock, 0);
-        super.neighborChanged(pState, level, pos, pBlock, pFromPos, pIsMoving);
+        super.neighborChanged(pState, level, pos, pBlock, orientation, pIsMoving);
     }
 
     @Override
@@ -234,15 +241,15 @@ public class DynamicCapBlock extends HugeMushroomBlock implements TreePart, Upda
 
     //Same behavior as beds
     @Override
-    public void fallOn(Level level, BlockState state, BlockPos pos, Entity entity, float fallDistance) {
+    public void fallOn(Level level, BlockState state, BlockPos pos, Entity entity, double fallDistance) {
         super.fallOn(level, state, pos, entity, fallDistance * 0.5F);
     }
 
     //Same behavior as beds
     @Override
-    public void updateEntityAfterFallOn(BlockGetter level, Entity entity) {
+    public void updateEntityMovementAfterFallOn(BlockGetter level, Entity entity) {
         if (entity.isSuppressingBounce()) {
-            super.updateEntityAfterFallOn(level, entity);
+            super.updateEntityMovementAfterFallOn(level, entity);
         } else {
             this.bounceUp(entity);
         }

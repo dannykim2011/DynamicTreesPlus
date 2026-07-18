@@ -10,7 +10,7 @@ import net.neoforged.neoforge.client.event.ModelEvent;
 /**
  * @author Harley O'Connor
  */
-@EventBusSubscriber(modid = DynamicTreesPlus.MOD_ID, bus = EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
+@EventBusSubscriber(modid = DynamicTreesPlus.MOD_ID, value = Dist.CLIENT)
 public final class BakedModelEventHandler {
 
     @SubscribeEvent

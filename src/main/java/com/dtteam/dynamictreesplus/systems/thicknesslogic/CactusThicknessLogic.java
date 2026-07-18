@@ -7,12 +7,17 @@ import com.dtteam.dynamictrees.systems.GrowSignal;
 import com.dtteam.dynamictreesplus.DynamicTreesPlus;
 import com.dtteam.dynamictreesplus.block.CactusBranchBlock;
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
 
 
 public abstract class CactusThicknessLogic extends RegistryEntry<CactusThicknessLogic> {
+
+    @Override
+    public final Class<CactusThicknessLogic> getRegistryType() {
+        return CactusThicknessLogic.class;
+    }
 
     public static final CactusThicknessLogic NULL_LOGIC = new CactusThicknessLogic(DynamicTreesPlus.location("null")) {
         @Override public CactusBranchBlock.CactusThickness thicknessAfterGrowthSignal(Level world, BlockPos pos, GrowSignal signal, CactusBranchBlock.CactusThickness currentThickness) { return currentThickness; }
@@ -21,7 +26,7 @@ public abstract class CactusThicknessLogic extends RegistryEntry<CactusThickness
 
     public static final Registry<CactusThicknessLogic> REGISTRY = new SimpleRegistry<>(CactusThicknessLogic.class, NULL_LOGIC);
 
-    public CactusThicknessLogic(ResourceLocation registryName) {
+    public CactusThicknessLogic(Identifier registryName) {
         super(registryName);
     }
 

@@ -17,6 +17,9 @@ import com.dtteam.dynamictreesplus.systems.mushroomlogic.context.MushroomCapCont
 import com.dtteam.dynamictreesplus.tree.HugeMushroomSpecies;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.LivingEntity;
@@ -49,14 +52,14 @@ public class DynamicCapCenterBlock extends Block implements TreePart, UpdatesSur
 
     public CapProperties properties = CapProperties.NULL;
 
-    public DynamicCapCenterBlock(CapProperties capProperties, final Properties properties) {
-        this(properties);
+    public DynamicCapCenterBlock(Identifier id, CapProperties capProperties, final Properties properties) {
+        this(id, properties);
         this.setProperties(capProperties);
         capProperties.setDynamicCapState(defaultBlockState(), true);
     }
 
-    public DynamicCapCenterBlock(Properties properties) {
-        super(properties);
+    public DynamicCapCenterBlock(Identifier id, Properties properties) {
+        super(properties.setId(ResourceKey.create(Registries.BLOCK, id)));
         this.registerDefaultState(stateDefinition.any().setValue(AGE, 0));
     }
 
@@ -139,7 +142,6 @@ public class DynamicCapCenterBlock extends Block implements TreePart, UpdatesSur
         return cap;
     }
 
-    @Override
     public ItemStack getCloneItemStack(BlockState state, HitResult target, LevelReader level, BlockPos pos, Player player) {
         return getProperties(state).getPrimitiveCapItemStack();
     }
@@ -184,7 +186,7 @@ public class DynamicCapCenterBlock extends Block implements TreePart, UpdatesSur
         if (couldGrow) {
             Family family = species.getFamily();
 
-            BlockState capCenter = level.getBlockState(pos.offset(signal.dir.getNormal()));
+            BlockState capCenter = level.getBlockState(pos.offset(signal.dir.getUnitVec3i()));
             int thickness = family.getPrimaryThickness() + (capCenter.hasProperty(DynamicCapCenterBlock.AGE)
                     ? capCenter.getValue(DynamicCapCenterBlock.AGE)
                     : 0);
@@ -226,7 +228,7 @@ public class DynamicCapCenterBlock extends Block implements TreePart, UpdatesSur
         Family family = species.getFamily();
         int thickness = Math.min(species.getFamily().getPrimaryThickness() + currentAge, species.getMaxBranchRadius());
 
-        BlockPos branchPos = pos.offset(signal.dir.getOpposite().getNormal());
+        BlockPos branchPos = pos.offset(signal.dir.getOpposite().getUnitVec3i());
         family.getBranchForPlacement(level, signal.getSpecies(), branchPos).ifPresent(branch ->
                 branch.setRadius(level, branchPos, thickness, null)
         );
@@ -293,7 +295,7 @@ public class DynamicCapCenterBlock extends Block implements TreePart, UpdatesSur
         boolean[] dirs = {false, !topIsCap, true, true, true, true};
         if (yMoved || age == 1){
             for (Direction dir : Direction.Plane.HORIZONTAL){
-                float dot = dir.getNormal().getX() * centerDirection.x + dir.getNormal().getZ() * centerDirection.z;
+                float dot = dir.getUnitVec3i().getX() * centerDirection.x + dir.getUnitVec3i().getZ() * centerDirection.z;
                 if (dot >= 0)
                     dirs[negativeFactor ? dir.getOpposite().ordinal() : dir.ordinal()] = false;
             }
@@ -303,8 +305,9 @@ public class DynamicCapCenterBlock extends Block implements TreePart, UpdatesSur
     }
 
     @Override
-    public boolean onDestroyedByPlayer(BlockState state, Level level, BlockPos pos, Player player, boolean willHarvest, FluidState fluid) {
-        boolean destroyed = super.onDestroyedByPlayer(state, level, pos, player, willHarvest, fluid);
+    public boolean onDestroyedByPlayer(BlockState state, Level level, BlockPos pos, Player player, ItemStack toolStack,
+                                       boolean willHarvest, FluidState fluid) {
+        boolean destroyed = super.onDestroyedByPlayer(state, level, pos, player, toolStack, willHarvest, fluid);
         //We update neighboring cap blocks in the corners as well
         updateNeighborsSurround(level, pos, DynamicCapBlock.class);
         return destroyed;
@@ -312,15 +315,15 @@ public class DynamicCapCenterBlock extends Block implements TreePart, UpdatesSur
 
     //Same behavior as beds
     @Override
-    public void fallOn(Level level, BlockState state, BlockPos pos, Entity entity, float fallDistance) {
+    public void fallOn(Level level, BlockState state, BlockPos pos, Entity entity, double fallDistance) {
         super.fallOn(level, state, pos, entity, fallDistance * 0.5F);
     }
 
     //Same behavior as beds
     @Override
-    public void updateEntityAfterFallOn(BlockGetter level, Entity entity) {
+    public void updateEntityMovementAfterFallOn(BlockGetter level, Entity entity) {
         if (entity.isSuppressingBounce()) {
-            super.updateEntityAfterFallOn(level, entity);
+            super.updateEntityMovementAfterFallOn(level, entity);
         } else {
             this.bounceUp(entity);
         }

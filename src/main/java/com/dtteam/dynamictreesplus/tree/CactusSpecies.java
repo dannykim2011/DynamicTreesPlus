@@ -11,11 +11,12 @@ import com.dtteam.dynamictrees.item.Seed;
 import com.dtteam.dynamictrees.platform.Services;
 import com.dtteam.dynamictrees.systems.GrowSignal;
 import com.dtteam.dynamictrees.systems.genfeature.context.PostGenerationContext;
+import com.dtteam.dynamictrees.systems.nodemapper.NetVolumeNode;
 import com.dtteam.dynamictrees.systems.nodemapper.FindEndsNode;
 import com.dtteam.dynamictrees.tree.TreeHelper;
 import com.dtteam.dynamictrees.tree.family.Family;
 import com.dtteam.dynamictrees.tree.species.Species;
-import com.dtteam.dynamictrees.utility.ResourceLocationUtils;
+import com.dtteam.dynamictrees.utility.IdentifierUtils;
 import com.dtteam.dynamictrees.worldgen.DynamicTreeGenerationContext;
 import com.dtteam.dynamictrees.worldgen.JoCode;
 import com.dtteam.dynamictreesplus.DynamicTreesPlus;
@@ -26,15 +27,19 @@ import com.dtteam.dynamictreesplus.items.FoodSeed;
 import com.dtteam.dynamictreesplus.systems.thicknesslogic.CactusThicknessLogic;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.Identifier;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockState;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BiConsumer;
@@ -46,7 +51,7 @@ public class CactusSpecies extends Species {
     private CactusThicknessLogic thicknessLogic;
     private boolean isSeedEdible = false;
 
-    public CactusSpecies(ResourceLocation name, Family family, LeavesProperties leavesProperties) {
+    public CactusSpecies(Identifier name, Family family, LeavesProperties leavesProperties) {
         super(name, family, leavesProperties);
     }
 
@@ -174,16 +179,16 @@ public class CactusSpecies extends Species {
     }
 
     @Override
-    public ResourceLocation getSaplingSmartModelLocation() {
+    public Identifier getSaplingSmartModelLocation() {
         return DynamicTreesPlus.location("block/smart_model/" + this.thicknessLogic.getRegistryName().getPath() + "_cactus");
     }
 
     @Override
-    public void addSaplingTextures(BiConsumer<String, ResourceLocation> textureConsumer,
-                                   ResourceLocation leavesTextureLocation, ResourceLocation barkTextureLocation) {
-        ResourceLocation sideLoc = this.getFamily().getTexturePath(Family.BRANCH).orElse(ResourceLocationUtils.suffix(barkTextureLocation, "_side"));
-        ResourceLocation topLoc = this.getFamily().getTexturePath(Family.BRANCH_TOP).orElse(ResourceLocationUtils.suffix(barkTextureLocation, "_top"));
-        ResourceLocation botLoc = this.getFamily().getTexturePath(CactusFamily.BRANCH_BOTTOM).orElse(ResourceLocationUtils.suffix(barkTextureLocation, "_bottom"));
+    public void addSaplingTextures(BiConsumer<String, Identifier> textureConsumer,
+                                   Identifier leavesTextureLocation, Identifier barkTextureLocation) {
+        Identifier sideLoc = this.getFamily().getTexturePath(Family.BRANCH).orElse(IdentifierUtils.suffix(barkTextureLocation, "_side"));
+        Identifier topLoc = this.getFamily().getTexturePath(Family.BRANCH_TOP).orElse(IdentifierUtils.suffix(barkTextureLocation, "_top"));
+        Identifier botLoc = this.getFamily().getTexturePath(CactusFamily.BRANCH_BOTTOM).orElse(IdentifierUtils.suffix(barkTextureLocation, "_bottom"));
         textureConsumer.accept("side", sideLoc);
         textureConsumer.accept("top", topLoc);
         textureConsumer.accept("bottom", botLoc);
@@ -195,13 +200,39 @@ public class CactusSpecies extends Species {
     }
 
     @Override
+    public List<ItemStack> getBranchesDrops(Level level, NetVolumeNode.Volume volume, ItemStack tool) {
+        final List<ItemStack> drops = new ArrayList<>();
+
+        if (level.isClientSide()) {
+            return drops;
+        }
+
+        final int rawVolume = Math.max(0, volume.getRawVolume());
+        final int cactusCount = rawVolume / NetVolumeNode.Volume.VOXELSPERLOG;
+        final int seedCount = (8 * (rawVolume % NetVolumeNode.Volume.VOXELSPERLOG)) / NetVolumeNode.Volume.VOXELSPERLOG;
+
+        if (cactusCount > 0) {
+            drops.add(new ItemStack(Blocks.CACTUS, cactusCount));
+        }
+
+        final ItemStack seedStack = this.hasSeed() ? this.getSeedStack(1) :
+                new ItemStack(BuiltInRegistries.ITEM.getValue(this.getSeedName()));
+        if (seedCount > 0 && !seedStack.isEmpty() && seedStack.getItem() != Items.AIR) {
+            seedStack.setCount(seedCount);
+            drops.add(seedStack);
+        }
+
+        return drops;
+    }
+
+    @Override
     public Species generateSeed() {
         return !this.shouldGenerateSeed() || this.seed != null ? this :
                 this.setSeed(RegistryHandler.addItem(getSeedName(), this::createSeedItem));
     }
 
     public Seed createSeedItem(){
-        return isSeedEdible ? new FoodSeed(this) : new Seed(this);
+        return isSeedEdible ? new FoodSeed(getSeedName(), this) : new Seed(getSeedName(), this);
     }
 
     public void setSeedEdible (boolean edible){

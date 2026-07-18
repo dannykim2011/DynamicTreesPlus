@@ -8,12 +8,17 @@ import com.dtteam.dynamictreesplus.DynamicTreesPlus;
 import com.dtteam.dynamictreesplus.systems.mushroomlogic.MushroomShapeConfiguration;
 import com.dtteam.dynamictreesplus.systems.mushroomlogic.context.MushroomCapContext;
 import net.minecraft.core.BlockPos;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
 public abstract class MushroomShapeKit extends ConfigurableRegistryEntry<MushroomShapeKit, MushroomShapeConfiguration> implements Configurable {
+
+    @Override
+    public final Class<MushroomShapeKit> getRegistryType() {
+        return MushroomShapeKit.class;
+    }
 
     public static final ConfigurationProperty<Integer> MAX_CAP_AGE =
             ConfigurationProperty.integer("max_cap_age");
@@ -40,7 +45,7 @@ public abstract class MushroomShapeKit extends ConfigurableRegistryEntry<Mushroo
     public static final ConfigurableRegistry<MushroomShapeKit, MushroomShapeConfiguration> REGISTRY =
             new ConfigurableRegistry<>(MushroomShapeKit.class, NULL, MushroomShapeConfiguration.TEMPLATES);
 
-    public MushroomShapeKit(final ResourceLocation registryName) {
+    public MushroomShapeKit(final Identifier registryName) {
         super(registryName);
     }
 
