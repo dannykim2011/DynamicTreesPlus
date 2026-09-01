@@ -11,6 +11,8 @@ import com.dtteam.dynamictrees.block.leaves.LeavesProperties;
 import com.dtteam.dynamictrees.block.soil.SoilBlock;
 import com.dtteam.dynamictrees.loot.DTLootParameterSets;
 import com.dtteam.dynamictrees.loot.entry.SeedItemLootPoolEntry;
+import com.dtteam.dynamictrees.loot.function.MultiplyByLogsCount;
+import com.dtteam.dynamictrees.loot.function.MultiplyBySticksCount;
 import com.dtteam.dynamictrees.systems.GrowSignal;
 import com.dtteam.dynamictrees.systems.growthlogic.context.DirectionSelectionContext;
 import com.dtteam.dynamictrees.tree.ChunkTreeHelper;
@@ -405,20 +407,17 @@ public class CactusBranchBlock extends BranchBlock {
     }
 
     @Override
-    public Optional<Block> getPrimitiveLog() {
-        return Optional.of(Blocks.CACTUS);
-    }
-
-    @Override
     public LootTable.Builder createBranchDrops(HolderLookup.Provider registries) {
         return LootTable.lootTable().withPool(
                 LootPool.lootPool().setRolls(ConstantValue.exactly(1)).add(
-                        LootItem.lootTableItem(Blocks.CACTUS)
+                        LootItem.lootTableItem(getPrimitiveLog().get())
+                                .apply(MultiplyByLogsCount.multiplyByLogsCount())
                                 .apply(ApplyExplosionDecay.explosionDecay())
                 )
         ).withPool(
                 LootPool.lootPool().setRolls(ConstantValue.exactly(1)).add(
                         SeedItemLootPoolEntry.lootTableSeedItem()
+                                .apply(MultiplyBySticksCount.multiplyBySticksCount())
                                 .apply(ApplyExplosionDecay.explosionDecay())
                 )
         ).setParamSet(DTLootParameterSets.BRANCHES);
