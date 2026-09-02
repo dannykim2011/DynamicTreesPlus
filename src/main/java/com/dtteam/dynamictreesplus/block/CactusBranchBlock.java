@@ -25,6 +25,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.resources.Identifier;
+import net.minecraft.server.ReloadableServerRegistries;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
 import net.minecraft.util.StringRepresentable;
@@ -55,7 +56,6 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import java.util.Objects;
-import java.util.Optional;
 
 @SuppressWarnings("deprecation")
 public class CactusBranchBlock extends BranchBlock {
@@ -410,7 +410,7 @@ public class CactusBranchBlock extends BranchBlock {
     public LootTable.Builder createBranchDrops(HolderLookup.Provider registries) {
         return LootTable.lootTable().withPool(
                 LootPool.lootPool().setRolls(ConstantValue.exactly(1)).add(
-                        LootItem.lootTableItem(getPrimitiveLog().get())
+                        LootItem.lootTableItem(getFamily().getPrimitiveLog().orElse(Blocks.CACTUS))
                                 .apply(MultiplyByLogsCount.multiplyByLogsCount())
                                 .apply(ApplyExplosionDecay.explosionDecay())
                 )
@@ -421,6 +421,11 @@ public class CactusBranchBlock extends BranchBlock {
                                 .apply(ApplyExplosionDecay.explosionDecay())
                 )
         ).setParamSet(DTLootParameterSets.BRANCHES);
+    }
+
+    @Override
+    public LootTable getLootTable(final ReloadableServerRegistries.Holder registries, final Species species) {
+        return createBranchDrops(null).build();
     }
 
 }

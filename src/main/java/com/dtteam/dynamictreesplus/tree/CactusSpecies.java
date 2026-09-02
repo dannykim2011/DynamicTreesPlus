@@ -11,7 +11,6 @@ import com.dtteam.dynamictrees.item.Seed;
 import com.dtteam.dynamictrees.platform.Services;
 import com.dtteam.dynamictrees.systems.GrowSignal;
 import com.dtteam.dynamictrees.systems.genfeature.context.PostGenerationContext;
-import com.dtteam.dynamictrees.systems.nodemapper.NetVolumeNode;
 import com.dtteam.dynamictrees.systems.nodemapper.FindEndsNode;
 import com.dtteam.dynamictrees.tree.TreeHelper;
 import com.dtteam.dynamictrees.tree.family.Family;
@@ -27,19 +26,15 @@ import com.dtteam.dynamictreesplus.items.FoodSeed;
 import com.dtteam.dynamictreesplus.systems.thicknesslogic.CactusThicknessLogic;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.LevelAccessor;
-import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SoundType;
 import net.minecraft.world.level.block.state.BlockState;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BiConsumer;
@@ -197,32 +192,6 @@ public class CactusSpecies extends Species {
     @Override
     public boolean shouldGenerateVoluntaryDrops() {
         return false;
-    }
-
-    @Override
-    public List<ItemStack> getBranchesDrops(Level level, NetVolumeNode.Volume volume, ItemStack tool) {
-        final List<ItemStack> drops = new ArrayList<>();
-
-        if (level.isClientSide()) {
-            return drops;
-        }
-
-        final int rawVolume = Math.max(0, volume.getRawVolume());
-        final int cactusCount = rawVolume / NetVolumeNode.Volume.VOXELSPERLOG;
-        final int seedCount = (8 * (rawVolume % NetVolumeNode.Volume.VOXELSPERLOG)) / NetVolumeNode.Volume.VOXELSPERLOG;
-
-        if (cactusCount > 0) {
-            drops.add(new ItemStack(Blocks.CACTUS, cactusCount));
-        }
-
-        final ItemStack seedStack = this.hasSeed() ? this.getSeedStack(1) :
-                new ItemStack(BuiltInRegistries.ITEM.getValue(this.getSeedName()));
-        if (seedCount > 0 && !seedStack.isEmpty() && seedStack.getItem() != Items.AIR) {
-            seedStack.setCount(seedCount);
-            drops.add(seedStack);
-        }
-
-        return drops;
     }
 
     @Override

@@ -22,6 +22,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.particles.ParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.resources.Identifier;
@@ -172,7 +173,9 @@ public class CapProperties extends RegistryEntry<CapProperties> implements Reset
      * @return The {@link ItemStack} object.
      */
     public ItemStack getPrimitiveCapItemStack() {
-        return new ItemStack(Item.BY_BLOCK.get(getPrimitiveCap().getBlock()));
+        final Identifier blockId = BuiltInRegistries.BLOCK.getKey(getPrimitiveCap().getBlock());
+        final Item item = BuiltInRegistries.ITEM.getValue(blockId);
+        return item == null ? ItemStack.EMPTY : new ItemStack(item);
     }
 
     public Family getFamily() {
