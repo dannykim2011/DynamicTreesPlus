@@ -1,6 +1,7 @@
 package com.dtteam.dynamictreesplus.init;
 
 import com.dtteam.dynamictrees.api.worldgen.FeatureCanceller;
+import com.dtteam.dynamictrees.api.registry.RegistryHandler;
 import com.dtteam.dynamictrees.block.CommonVoxelShapes;
 import com.dtteam.dynamictrees.block.fruit.Fruit;
 import com.dtteam.dynamictrees.event.AddResourceLoadersEvent;
@@ -12,6 +13,7 @@ import com.dtteam.dynamictrees.tree.family.Family;
 import com.dtteam.dynamictrees.tree.species.Species;
 import com.dtteam.dynamictreesplus.DynamicTreesPlus;
 import com.dtteam.dynamictreesplus.block.CactusFruit;
+import com.dtteam.dynamictreesplus.block.DynamicCactusFlowerBlock;
 import com.dtteam.dynamictreesplus.block.mushroom.CapProperties;
 import com.dtteam.dynamictreesplus.resources.CapPropertiesResourceLoader;
 import com.dtteam.dynamictreesplus.systems.featuregen.DynamicTreesPlusGenFeatures;
@@ -29,8 +31,13 @@ import com.dtteam.dynamictreesplus.tree.HugeMushroomSpecies;
 import com.dtteam.dynamictreesplus.worldgen.canceller.CactusFeatureCanceller;
 import com.dtteam.dynamictreesplus.worldgen.canceller.MushroomFeatureCanceller;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.CactusBlock;
+import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.levelgen.feature.configurations.HugeMushroomFeatureConfiguration;
+import net.minecraft.world.level.material.MapColor;
+import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
@@ -38,7 +45,11 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.neoforge.registries.NewRegistryEvent;
 import net.neoforged.neoforge.registries.RegisterEvent;
 
+import java.util.function.Supplier;
+
 public class DTPRegistries {
+
+    public static Supplier<Block> DYNAMIC_CACTUS_FLOWER;
 
     public static final StraightLogic STRAIGHT_LOGIC = new StraightLogic(DynamicTreesPlus.location("straight"));
     public static final SaguaroCactusLogic SAGUARO_CACTUS_LOGIC = new SaguaroCactusLogic(DynamicTreesPlus.location("saguaro_cactus"));
@@ -53,6 +64,19 @@ public class DTPRegistries {
         CommonVoxelShapes.SHAPES.put(DynamicTreesPlus.location("tall_cactus").toString(), TALL_CACTUS_SAPLING_SHAPE);
         CommonVoxelShapes.SHAPES.put(DynamicTreesPlus.location("medium_cactus").toString(), MEDIUM_CACTUS_SAPLING_SHAPE);
         CommonVoxelShapes.SHAPES.put(DynamicTreesPlus.location("short_cactus").toString(), SHORT_CACTUS_SAPLING_SHAPE);
+
+        DYNAMIC_CACTUS_FLOWER = RegistryHandler.addBlock(
+                DynamicTreesPlus.location("dynamic_cactus_flower"),
+                () -> new DynamicCactusFlowerBlock(
+                        DynamicTreesPlus.location("dynamic_cactus_flower"),
+                        BlockBehaviour.Properties.of()
+                                .mapColor(MapColor.PLANT)
+                                .noCollision()
+                                .instabreak()
+                                .sound(SoundType.PINK_PETALS)
+                                .pushReaction(PushReaction.DESTROY)
+                )
+        );
 
     }
 

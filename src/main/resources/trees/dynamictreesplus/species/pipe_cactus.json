@@ -19,6 +19,7 @@
   "cactus_thickness_logic": "dynamictreesplus:pipe",
   "mega_species": "dynamictreesplus:mega_cactus",
   "features": [
-    "dynamictreesplus:cactus_clones"
+    "dynamictreesplus:cactus_clones",
+    "dynamictreesplus:pipe_cactus_flower"
   ]
 }

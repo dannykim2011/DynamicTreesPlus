@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "pillar=false,pipe=false": { "model": "dynamictreesplus:block/dynamic_cactus_flower" },
+    "pillar=true,pipe=false": { "model": "dynamictreesplus:block/pillar_cactus_flower" },
+    "pillar=false,pipe=true": { "model": "dynamictreesplus:block/pipe_cactus_flower" },
+    "pillar=true,pipe=true": { "model": "dynamictreesplus:block/pipe_cactus_flower" }
+  }
+}

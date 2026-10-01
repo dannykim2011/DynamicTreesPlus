@@ -18,5 +18,8 @@
   },
   "preferred_climate": "arid",
   "climate_tolerance": 0.6,
-  "cactus_thickness_logic": "dynamictreesplus:mega"
+  "cactus_thickness_logic": "dynamictreesplus:mega",
+  "features": [
+    "dynamictreesplus:cactus_flower"
+  ]
 }

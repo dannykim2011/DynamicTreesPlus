@@ -11,5 +11,8 @@
   "preferred_climate": "arid",
   "climate_tolerance": 0.4,
   "cactus_thickness_logic": "dynamictreesplus:pillar",
-  "mega_species": "dynamictreesplus:mega_cactus"
+  "mega_species": "dynamictreesplus:mega_cactus",
+  "features": [
+    "dynamictreesplus:pillar_cactus_flower"
+  ]
 }
